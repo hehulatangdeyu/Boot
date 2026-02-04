@@ -1,0 +1,295 @@
+/*
+ * Copyright (c) 2017 Linaro Limited
+ * Copyright (c) 2024 STMicroelectronics
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+#include <st/f4/stm32f407Xe.dtsi>
+#include <st/f4/stm32f407v(e-g)tx-pinctrl.dtsi>
+#include <zephyr/dt-bindings/pwm/pwm.h>
+
+/ {
+    model = "xihu";
+    compatible = "st,xihu";
+
+    chosen {
+        zephyr,console = &usart1;
+        zephyr,sram = &sram0;
+        zephyr,flash = &flash0;
+        zephyr,ccm = &ccm0;
+    };
+
+    users_led:leds {
+    	compatible = "gpio-leds";
+
+    	blue_led_1: led_1 {
+    		gpios = <&gpiob 0 GPIO_ACTIVE_LOW>;
+    		label = "blue_led_1";
+    	};
+
+    	blue_led_2: led_2 {
+    		gpios = <&gpiob 1 GPIO_ACTIVE_LOW>;
+    		label = "blue_led_2";
+    	};
+
+    	blue_led_3: led_3 {
+    		gpios = <&gpioe 9 GPIO_ACTIVE_LOW>;
+    		label = "blue_led_3";
+    	};
+    };
+
+    // users_led:leds {
+    //     compatible = "pwm-leds";
+
+    //     blue_led_1: led_1 {
+    //         pwms = <&pwm3 3 PWM_MSEC(10) PWM_POLARITY_INVERTED>;
+    //         label = "blue_led_1";
+    //     };
+
+    //     blue_led_2: led_2 {
+    //         pwms = <&pwm3 4 PWM_MSEC(10) PWM_POLARITY_INVERTED>;
+    //         label = "blue_led_2";
+    //     };
+
+    //     blue_led_3: led_3 {
+    //         pwms = <&pwm1 1 PWM_MSEC(10) PWM_POLARITY_INVERTED>;
+    //         label = "blue_led_3";
+    //     };
+    // };
+
+    users_key: keys {
+        compatible = "gpio-keys";
+
+        debug_key_1: key_1 {
+            gpios = <&gpioa 0 GPIO_ACTIVE_LOW>;
+            label = "debug_key_1";
+        };
+        debug_key_2: key_2 {
+            gpios = <&gpioc 4 GPIO_ACTIVE_LOW>;
+            label = "debug_key_2";
+        };
+        debug_key_3: key_3 {
+            gpios = <&gpioc 5 GPIO_ACTIVE_LOW>;
+            label = "debug_key_3";
+        };
+    };
+
+    aliases {
+        led0 = &blue_led_1;
+        key0 = &debug_key_1;
+        key1 = &debug_key_2;
+        key2 = &debug_key_3;
+        norflash1 = &w25q128_1;
+        norflash2 = &w25q128_2;
+    };
+};
+
+&clk_lse {
+    status = "okay";
+};
+
+&clk_hse {
+    clock-frequency = <DT_FREQ_M(8)>;
+    status = "okay";
+};
+
+&pll {
+    div-m = <4>;
+    mul-n = <168>;
+    div-p = <2>;
+    div-q = <4>;
+    clocks = <&clk_hse>;
+    status = "okay";
+};
+
+&rcc {
+    clocks = <&pll>;
+    clock-frequency = <DT_FREQ_M(168)>;
+    ahb-prescaler = <1>;
+    apb1-prescaler = <4>;
+    apb2-prescaler = <2>;
+};
+
+&rtc {
+    clocks = <&rcc STM32_CLOCK(APB1, 28)>,
+              <&rcc STM32_SRC_LSI RTC_SEL(2)>;
+    status = "okay";
+};
+
+&usart1 {
+    pinctrl-0 = <&usart1_tx_pa9 &usart1_rx_pa10>;
+    pinctrl-names = "default";
+    current-speed = <115200>;
+    status = "okay";
+};
+
+// &usart2 {
+//     pinctrl-0 = <&usart2_tx_pa2 &usart2_rx_pa3>;
+//     pinctrl-names = "default";
+//     current-speed = <115200>;
+//     status = "okay";
+// };
+
+&usart3 {
+    pinctrl-0 = <&usart3_tx_pd8 &usart3_rx_pd9>;
+    pinctrl-names = "default";
+    current-speed = <115200>;
+    status = "okay";
+};
+
+&spi1 {
+	pinctrl-0 = <&spi1_sck_pa5 &spi1_miso_pa6 &spi1_mosi_pa7>;
+	pinctrl-names = "default";
+	cs-gpios = <&gpioe 13 GPIO_ACTIVE_LOW>, <&gpioe 14 GPIO_ACTIVE_LOW>;
+	status = "okay";
+
+    w25q128_1: w25q128@0 {
+        compatible = "jedec,spi-nor";
+        reg = <0>;
+        spi-max-frequency = <24000000>;
+        jedec-id = [ef 40 18];
+        size = <0x8000000>; /* 16MB */
+
+        partitions {
+            compatible = "fixed-partitions";
+            #address-cells = <1>;
+            #size-cells = <1>;
+
+            /* 元数据区 A (64KB) 存放失败次数-断点偏移量 */
+            meta_partition_a: partition@0 {
+                label = "meta_a";
+                reg = <0x00000000 0x00010000>;
+            };
+
+            /* 正在运行的固件的Flash备份 1MB */
+            active_backup_partition: partition@10000 {
+                label = "active_backup";
+                reg = <0x00010000 0x00100000>;
+            };
+
+            /* 当前接收新固件的下载暂存区 2MB 用于断点续传 */
+            download_partition: partition@110000 {
+                label = "download_slot";
+                reg = <0x00110000 0x00200000>;
+            };
+
+            /* 存放依据差分固件包与旧固件还原成的新固件存放区 */
+            diff_fw_partition: partition@310000 {
+                label = "diff_firmware_slot";
+                reg = <0x00310000 0x00200000>;
+            };
+
+            /* 剩余空间内 后期扩展Fatfs*/
+            fatfs_partition: partition@510000 {
+                label = "fatfs";
+                reg = <0x00510000 0x00A32400>;
+            };
+        };
+    };
+
+    w25q128_2: w25q128@1 {
+        compatible = "jedec,spi-nor";
+        reg = <1>;
+        spi-max-frequency = <24000000>;
+        jedec-id = [ef 40 18];
+        size = <0x8000000>;
+
+        partitions {
+            compatible = "fixed-partitions";
+            #address-cells = <1>;
+            #size-cells = <1>;
+            
+            /* 元数据区 b 64KB */
+            meta_partition_b: partition@0 {
+                label = "meta_b";
+                reg = <0x00000000 0x00010000>;
+            };
+
+            /* 出厂固件 绝对无误 */
+            factory_fw: partition@10000 {
+                label = "factory_fw";
+                reg = <0x00010000 0x00100000>;
+            };
+
+            archive_1: partition@110000 {
+                label = "archive_1";
+                reg = <0x00110000 0x00100000>;
+            };
+
+            archive_2: partition@210000 {
+                label = "archive_2";
+                reg = <0x00210000 0x00100000>;
+            };
+
+            archive_3: partition@310000 {
+                label = "archive_3";
+                reg = <0x00310000 0x00100000>;
+            };
+
+            archive_4: partition@410000 {
+                label = "archive_4";
+                reg = <0x00410000 0x00100000>;
+            };
+
+            archive_5: partition@510000 {
+                label = "archive_5";
+                reg = <0x00510000 0x00100000>;
+            };
+
+            archive_6: partition@610000 {
+                label = "archive_6";
+                reg = <0x00610000 0x00100000>;
+            };
+
+            archive_7: partition@710000 {
+                label = "archive_7";
+                reg = <0x00710000 0x00100000>;
+            };
+
+            archive_8: partition@810000 {
+                label = "archive_8";
+                reg = <0x00810000 0x00100000>;
+            };
+
+            archive_9: partition@910000 {
+                label = "archive_9";
+                reg = <0x00910000 0x00100000>;
+            };
+
+            archive_10: partition@a10000 {
+                label = "archive_10";
+                reg = <0x00a10000 0x00100000>;
+            };
+
+            archive_repo: partition@b10000 {
+                label = "archive_repo";
+                reg = <0x00b10000 0x004F0000>;
+            };
+        };
+    };
+};
+
+&flash0 {
+    partitions {
+        compatible = "fixed-partitions";
+        #address-cells = <1>;
+        #size-cells = <1>;
+
+        bootloader: partition@0 {
+            label = "bootloader";
+            reg = <0x00000000 DT_SIZE_K(48)>;    // 偏移 0x0, 大小 60KB
+        };
+
+        arg_info: partition@C000 {
+            label = "arg_info";
+            reg = <0x0000c000 DT_SIZE_K(16)>;     // 偏移 0xF000, 大小 4KB
+        };
+
+        application: partition@10000 {
+            label = "application";
+            reg = <0x00010000 DT_SIZE_K(448)>;   // 偏移 0x10000, 大小 448KB
+        };
+    };
+};

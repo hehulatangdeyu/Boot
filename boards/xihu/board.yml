@@ -1,0 +1,6 @@
+board:
+  name: xihu
+  full_name: 407开发板
+  vendor: zw
+  socs:
+    - name: stm32f407xx

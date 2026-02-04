@@ -1,0 +1,19 @@
+identifier: xihu
+name: 407开发板
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+ram: 192
+flash: 512
+supported:
+  - counter
+  - i2c
+  - spi
+  - display
+  - led_strip
+  - key
+  - sensors
+  - uart
+vendor: zw
