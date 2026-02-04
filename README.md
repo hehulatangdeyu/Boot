@@ -31,3 +31,5 @@
     | 1byte  | 2byte          | 1byte         | 2byte       | data length byte | 2byte |
     |                              MAX MTU 4104                                        |
 
+HPatchLite开源组件:https://github.com/sisong/HPatchLite.git
+Tinyuz开源组件:https://github.com/sisong/tinyuz.git
