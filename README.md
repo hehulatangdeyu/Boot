@@ -1,5 +1,10 @@
-2026 - 01 - 18
-新增上位机HPatchLite差分升级功能。
+历史:
+2026 - 01 - 26
+1. 新增上位机HPatchLite差分升级功能。
+2026 - 02 - 05
+1. 修复bitos.h文件中字节序操作宏，使用更加标准的byteoder.h [在ARM架构中，如果指针地址不是4的整数倍，访问uin32_t会直接触发HardFault硬件错误，且原版本未处理大小端字节序问题，使修复后支持的架构更灵活]。
+2. 修复bl_uart.c与wrok_queue.c中数据接收逻辑，采用标准ringbuf管理bin文件数据存取，明确区分bl_uart.c中的线程优先级，规避出现竞态情况。[高优先级，upgrade rx thread 线程一旦通知数据包收满，交由packet rx thread 线程处理时, 为保证Flash擦除操作时,cpu不被upgrade rx thread 线程抢占，避免形成一种竞态情况]。
+3. 修复bl_button.c中硬编码disable_gpio_interrupts硬编码API函数，使用标准的Zephyr管理方式，移除按键回调与引脚配置。
 
 升级流程图：
 上位机：下发期望存储固件信息地址、期望固件存储起始地址 ->

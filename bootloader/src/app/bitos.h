@@ -3,45 +3,64 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <zephyr/sys/byteorder.h>
 
-#define TAMPATE_GET(_nick, _type) \
-    static inline _type get_##_nick(uint8_t* ptr){ \
-        return *(_type *)ptr; \
-    }
+static inline uint32_t get_u32(const uint8_t *ptr) {
+    return sys_get_le32(ptr);
+}
 
-#define TAMPATE_GET_INC(_nick, _type) \
-    static inline _type get_##_nick##_inc(uint8_t** ptr){ \
-        uint8_t* p = *ptr; \
-        *ptr += sizeof(_type); \
-        return get_##_nick(p); \
-    }
+static inline uint32_t get_u32_inc(uint8_t **ptr) {
+    uint32_t val = sys_get_le32(*ptr);
+    *ptr += 4;
+    return val;
+}
 
-#define TAMPATE_PUT(_nick, _type) \
-    static inline void put_##_nick(uint8_t* ptr, _type value) { \
-        *(_type *)ptr = value; \
-    }
+static inline uint16_t get_u16(const uint8_t *ptr) {
+    return sys_get_le16(ptr);
+}
 
-#define TAMPATE_PUT_INC(_nick, _type) \
-    static inline void put_##_nick##_inc(uint8_t** ptr, _type value) { \
-        uint8_t* p = *ptr; \
-        *ptr += sizeof(_type); \
-        put_##_nick(p, value); \
-    }
+static inline uint16_t get_u16_inc(uint8_t **ptr) {
+    uint16_t val = sys_get_le16(*ptr);
+    *ptr += 2;
+    return val;
+}
 
-#define __VALUE_OPERATION_TAMPATE(_micro) \
-_micro(u8, uint8_t) \
-_micro(u16, uint16_t) \
-_micro(u32, uint32_t) \
-_micro(i8, int8_t) \
-_micro(i16, int16_t) \
-_micro(i32, int32_t) \
-_micro(float, float) \
-_micro(double, double)
+static inline uint8_t get_u8(const uint8_t *ptr) {
+    return *ptr;
+}
 
-__VALUE_OPERATION_TAMPATE(TAMPATE_GET)
-__VALUE_OPERATION_TAMPATE(TAMPATE_GET_INC)
-__VALUE_OPERATION_TAMPATE(TAMPATE_PUT)
-__VALUE_OPERATION_TAMPATE(TAMPATE_PUT_INC)
+static inline uint8_t get_u8_inc(uint8_t **ptr) {
+    uint8_t val = **ptr;
+    *ptr += 1;
+    return val;
+}
+
+static inline void put_u8(uint8_t *ptr, uint8_t val) {
+    *ptr = val;
+}
+
+static inline void put_u8_inc(uint8_t **ptr, uint8_t val) {
+    **ptr = val;
+    *ptr += 1;
+}
+
+static inline void put_u32(uint8_t *ptr, uint32_t val) {
+    sys_put_le32(val, ptr);
+}
+
+static inline void put_u32_inc(uint8_t **ptr, uint32_t val) {
+    sys_put_le32(val, *ptr);
+    *ptr += 4;
+}
+
+static inline void put_u16(uint8_t *ptr, uint16_t val) {
+    sys_put_le16(val, ptr);
+}
+
+static inline void put_u16_inc(uint8_t **ptr, uint16_t val) {
+    sys_put_le16(val, *ptr);
+    *ptr += 2;
+}
 
 static inline void get_bytes(const uint8_t *ptr, uint8_t* buffer, uint32_t size)
 {

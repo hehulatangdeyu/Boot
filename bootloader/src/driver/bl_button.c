@@ -63,12 +63,9 @@ void disable_gpio_interrupts(void)
 {
     if (gpio_is_ready_dt(&button)) 
     {
-        gpio_remove_callback(button.port, &button_cb_data);
-
-        gpio_pin_interrupt_configure_dt(&button, GPIO_INT_DISABLE);
-
-        GPIOA->MODER |= (3U << (0 * 2));
-
-        EXTI->PR = EXTI_PR_PR0;
+        return;
     }
+
+    gpio_remove_callback(button.port, &button_cb_data);
+    gpio_pin_interrupt_configure_dt(&button, GPIO_INT_DISABLE);
 }

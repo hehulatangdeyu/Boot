@@ -12,8 +12,7 @@ void serial_irq_handler(const struct device *dev, void *user_data);
 static const struct device *const uart_dev = DEVICE_DT_GET(DT_NODELABEL(usart3));
 static upgrade_rx_callback_t cb;
 
-void bl_upgrade_callback_register(upgrade_rx_callback_t callback)
-{
+void bl_upgrade_callback_register(upgrade_rx_callback_t callback) {
     cb = callback;
 }
 
@@ -34,7 +33,7 @@ void bl_upgrade_packet_send(uint8_t *data, uint32_t length)
     {
         uart_poll_out(uart_dev, data[i]);
     }
-    // printk(": response successfully %u bytes", length);
+    LOG_DBG("response successfully %u bytes", length);
 }
 
 void bl_upgrade_uart_init(void)
@@ -98,13 +97,12 @@ void serial_irq_handler(const struct device *dev, void *user_data)
             if (cb != NULL) {
                 cb(rx_data);
             }
-            // k_msgq_put(&uart_msgq, &rx_data, K_NO_WAIT);
         }
     }
 }
 
 void disable_uart_peripherals(void)
 {
-    USART1->CR1 &= ~USART_CR1_UE;
-    USART3->CR1 &= ~USART_CR1_UE;
+    // USART1->CR1 &= ~USART_CR1_UE;
+    // USART3->CR1 &= ~USART_CR1_UE;
 }

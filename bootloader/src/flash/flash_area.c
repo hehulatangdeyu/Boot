@@ -271,10 +271,6 @@ int bl_flash_program(uint32_t address, uint32_t size, uint8_t *data)
     uint32_t part_abs_start = flash_base + ft->fa_off;  // 0x08000000 + 0x10000 = 0x08010000
     uint32_t part_abs_end = part_abs_start + ft->fa_size - 1;  // 0x0807FFFF
 
-    LOG_DBG("Debug: app partition abs range: 0x%08x ~ 0x%08x", app_part_abs_start, app_part_abs_end);
-    LOG_DBG("Debug: program req: address=0x%08x, size=0x%08x (end=0x%08x)", 
-                                                address, size, address + size - 1);
-
     if ((address < part_abs_start) || ((address + size - 1) > part_abs_end)) {
         LOG_ERR("program range out of app partition!");
         LOG_ERR("req range: 0x%08x - 0x%08x", address, address + size - 1);
